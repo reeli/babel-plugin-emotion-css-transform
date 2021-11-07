@@ -23,6 +23,9 @@ import {
   jsxIdentifier,
   jsxExpressionContainer,
   parenthesizedExpression,
+  isMemberExpression,
+  MemberExpression,
+  isIdentifier,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -76,20 +79,50 @@ const createMemberExpression = (keyPath: string) => {
   return fn(list);
 };
 
+const pickerAllIdentifierName = (data: MemberExpression) => {
+  const res = [];
+
+  if (isIdentifier(data.property)) {
+    res.push(data.property.name);
+  }
+
+  const pick = (data: MemberExpression) => {
+    const final = [];
+
+    if (isIdentifier(data.object)) {
+      final.unshift(data.object.name);
+    }
+
+    return final;
+  };
+
+  return [
+    ...pick(isMemberExpression(data.object) ? data.object : data),
+    ...res,
+  ].join(".");
+};
+
 const handleCssProperties = (
   nodePath: NodePath<ObjectProperty>,
+  value: string,
   opts: { mapping: { [key: string]: any } },
 ) => {
   const name = (nodePath.node.key as any).name;
-  const value = nodePath.node.value as StringLiteral | NumericLiteral;
   const mapping = opts.mapping;
 
-  if (name === "color" && mapping[name][value.value]) {
+  if (name === "color" && mapping[name][value]) {
     nodePath.replaceWith(
       objectProperty(
         identifier(name),
-        createMemberExpression(mapping[name][value.value]),
+        createMemberExpression(mapping[name][value]),
       ),
+    );
+    return;
+  }
+
+  if (name !== "color" && mapping[value]) {
+    nodePath.replaceWith(
+      objectProperty(identifier(name), createMemberExpression(mapping[value])),
     );
     return;
   }
@@ -98,6 +131,7 @@ const handleCssProperties = (
     nodePath.replaceWith(
       objectProperty(identifier(name), createMemberExpression(mapping[name])),
     );
+    return;
   }
 };
 
@@ -105,7 +139,7 @@ export default () => ({
   name: "emotion-css-transform",
   visitor: {
     JSXAttribute: {
-      enter(nodePath: NodePath<JSXAttribute>) {
+      exit(nodePath: NodePath<JSXAttribute>) {
         const attributeName = nodePath.node.name.name;
         const valueExpression = (nodePath.node?.value as any)?.expression;
 
@@ -117,7 +151,8 @@ export default () => ({
       },
     },
     CallExpression: {
-      enter(nodePath: NodePath<CallExpression>) {
+      exit(nodePath: NodePath<CallExpression>) {
+        // console.log((nodePath.node.arguments[0] as any).properties[0]);
         if (
           isCss((nodePath.node.callee as any).name) &&
           isVariableDeclarator(nodePath.parentPath?.node)
@@ -151,8 +186,18 @@ export default () => ({
           isStringLiteral(nodePath.node.value) ||
           isNumericLiteral(nodePath.node.value);
 
-        if ((isInlineCssObj || isExtractedCssObj) && isStringOrNumberValue) {
-          handleCssProperties(nodePath, opts);
+        if (isInlineCssObj || isExtractedCssObj) {
+          if (isStringOrNumberValue) {
+            const value = nodePath.node.value as StringLiteral | NumericLiteral;
+            return handleCssProperties(nodePath, value.value as string, opts);
+          }
+
+          if (isMemberExpression(nodePath.node.value)) {
+            const val = pickerAllIdentifierName(nodePath.node.value);
+            if (!val.startsWith(constants.theme)) {
+              return handleCssProperties(nodePath, val, opts);
+            }
+          }
         }
       },
     },

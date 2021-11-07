@@ -23,9 +23,21 @@ const cases = [
     dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({color: theme.color.primary});`,
   },
   {
-    title: "Should the case when color is defined but not included in mapping",
+    title:
+      "Should handle the case when color is defined but not included in mapping",
     src: `<div css={divStyles} />;const divStyles = css({color: "#ccc"});`,
-    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({color: "#ccc"});`,
+    dest: `<div css={divStyles} />;const divStyles = css({color: "#ccc"});`,
+  },
+  {
+    title: "Should handle the case when origin color is defined by variable",
+    src: `<div css={divStyles} />;const divStyles = css({color: colors.red});`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({color: theme.color.red});`,
+  },
+  {
+    title:
+      "Should handle the case when origin font size is defined by variable",
+    src: `<div css={divStyles} />;const divStyles = css({fontSize: fonts.h1});`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
   },
   {
     title: "Should not throw error if the jsx attribute has no value",
@@ -41,7 +53,9 @@ const mapping: { [key: string]: any } = {
     red: "theme.color.primary",
     blue: "theme.color.secondary",
     pink: "theme.color.text.primary",
+    "colors.red": "theme.color.red",
   },
+  "fonts.h1": "theme.fontSize.h1",
 };
 
 function unPad(str: string) {

@@ -21,6 +21,7 @@ const mapping: { [key: string]: any } = {
     red: "theme.color.primary",
     blue: "theme.color.secondary",
     pink: "theme.color.text.primary",
+    "colors.red": "theme.color.red",
   },
 };
 
