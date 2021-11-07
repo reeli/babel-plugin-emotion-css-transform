@@ -13,6 +13,16 @@ function unPad(str: string) {
   return str.replace(/^\n+|\n+$/, "").replace(/\n+/g, "\n");
 }
 
+const mapping: { [key: string]: any } = {
+  fontSize: "theme.fontSize.color.red",
+  radius: "theme.radius",
+  color: {
+    red: "theme.colors.primary",
+    blue: "theme.colors.secondary",
+    pink: "theme.colors.text.primary",
+  },
+};
+
 test("debug", () => {
   const src = transform(
     `
@@ -33,7 +43,7 @@ const containerStyles = css({
 });
     `,
     {
-      plugins: ["@babel/plugin-syntax-jsx", emotionCssTransform],
+      plugins: ["@babel/plugin-syntax-jsx", [emotionCssTransform, { mapping }]],
     },
   )!.code;
 

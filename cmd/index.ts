@@ -14,11 +14,21 @@ fg(source, {
   files.forEach((fileName) => transformFile(fileName));
 });
 
+const mapping: { [key: string]: any } = {
+  fontSize: "theme.fontSize.color.red",
+  radius: "theme.radius",
+  color: {
+    red: "theme.colors.primary",
+    blue: "theme.colors.secondary",
+    pink: "theme.colors.text.primary",
+  },
+};
+
 const transformFile = (fileName: string) => {
   fs.readFile(fileName, (_, data) => {
     const content = data.toString("utf-8");
     const code = transform(content, {
-      plugins: ["@babel/plugin-syntax-jsx", emotionCssTransform],
+      plugins: ["@babel/plugin-syntax-jsx", [emotionCssTransform, { mapping }]],
     })!.code;
 
     if (code) {

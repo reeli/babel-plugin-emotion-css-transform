@@ -63,17 +63,6 @@ const createMemberExpression = (keyPath: string) => {
   return fn(list);
 };
 
-const mapping: { [key: string]: string } = {
-  fontSize: "theme.fontSize.color.red",
-  radius: "theme.radius",
-};
-
-const colorMapping: { [key: string]: string } = {
-  red: "theme.colors.primary",
-  blue: "theme.colors.secondary",
-  pink: "theme.colors.text.primary",
-};
-
 export default () => ({
   name: "emotion-css-transform",
   visitor: {
@@ -102,7 +91,7 @@ export default () => ({
       },
     },
     ObjectProperty: {
-      enter(nodePath: NodePath<ObjectProperty>) {
+      enter(nodePath: NodePath<ObjectProperty>, { opts }: any) {
         if (
           isCallExpression(nodePath?.parentPath?.parentPath?.node) &&
           isCss((nodePath?.parentPath?.parentPath?.node.callee as any).name) &&
@@ -111,12 +100,13 @@ export default () => ({
         ) {
           const name = (nodePath.node.key as any).name;
           const value = nodePath.node.value;
+          const mapping = opts.mapping;
 
-          if (name === "color" && colorMapping[value.value]) {
+          if (name === "color" && mapping[name][value.value]) {
             nodePath.replaceWith(
               objectProperty(
                 identifier(name),
-                createMemberExpression(colorMapping[value.value]),
+                createMemberExpression(mapping[name][value.value]),
               ),
             );
             return;
