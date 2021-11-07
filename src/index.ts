@@ -1,16 +1,9 @@
 import { NodePath } from "@babel/traverse";
 import {
-  JSXAttribute,
-  jsxExpressionContainer,
   arrowFunctionExpression,
-  jsxAttribute,
-  jsxIdentifier,
-  isObjectExpression,
-  Expression,
   identifier,
   tsTypeAnnotation,
   tSTypeReference,
-  parenthesizedExpression,
   isVariableDeclarator,
   CallExpression,
   ObjectProperty,
@@ -19,8 +12,25 @@ import {
   objectProperty,
   memberExpression,
   isNumericLiteral,
+  isJSXAttribute,
+  isJSXExpressionContainer,
+  StringLiteral,
+  NumericLiteral,
+  JSXAttribute,
+  isObjectExpression,
+  Expression,
+  jsxAttribute,
+  jsxIdentifier,
+  jsxExpressionContainer,
+  parenthesizedExpression,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
+
+const constants = {
+  theme: "theme",
+  ThemeType: "Theme",
+  css: "css",
+};
 
 const createParamWithType = (name: string, type: string) => {
   const id = identifier(name);
@@ -28,18 +38,21 @@ const createParamWithType = (name: string, type: string) => {
   return id;
 };
 
-const themeWithType = createParamWithType("theme", "Theme");
+const themeWithType = createParamWithType(constants.theme, constants.ThemeType);
 
 const createJsxAttribute = (name: string, value: Expression) => {
   return jsxAttribute(
     jsxIdentifier(name),
     jsxExpressionContainer(
-      arrowFunctionExpression([themeWithType], parenthesizedExpression(value!)),
+      arrowFunctionExpression(
+        [identifier(constants.theme)],
+        parenthesizedExpression(value!),
+      ),
     ),
   );
 };
 
-const isCss = (name: unknown): name is string => name === "css";
+const isCss = (name: unknown): name is string => name === constants.css;
 
 const createMemberExpression = (keyPath: string) => {
   const list = keyPath.split(".");
@@ -63,13 +76,38 @@ const createMemberExpression = (keyPath: string) => {
   return fn(list);
 };
 
+const handleCssProperties = (
+  nodePath: NodePath<ObjectProperty>,
+  opts: { mapping: { [key: string]: any } },
+) => {
+  const name = (nodePath.node.key as any).name;
+  const value = nodePath.node.value as StringLiteral | NumericLiteral;
+  const mapping = opts.mapping;
+
+  if (name === "color" && mapping[name][value.value]) {
+    nodePath.replaceWith(
+      objectProperty(
+        identifier(name),
+        createMemberExpression(mapping[name][value.value]),
+      ),
+    );
+    return;
+  }
+
+  if (name !== "color" && mapping[name]) {
+    nodePath.replaceWith(
+      objectProperty(identifier(name), createMemberExpression(mapping[name])),
+    );
+  }
+};
+
 export default () => ({
   name: "emotion-css-transform",
   visitor: {
     JSXAttribute: {
       enter(nodePath: NodePath<JSXAttribute>) {
         const attributeName = nodePath.node.name.name;
-        const valueExpression = (nodePath.node.value as any).expression;
+        const valueExpression = (nodePath.node?.value as any)?.expression;
 
         if (isCss(attributeName) && isObjectExpression(valueExpression)) {
           nodePath.replaceWith(
@@ -92,34 +130,29 @@ export default () => ({
     },
     ObjectProperty: {
       enter(nodePath: NodePath<ObjectProperty>, { opts }: any) {
-        if (
+        const jsxAttribute = nodePath.findParent((path) =>
+          isJSXAttribute(path),
+        );
+
+        const jsxExpressionContainer = nodePath.findParent((path) =>
+          isJSXExpressionContainer(path),
+        );
+
+        const isInlineCssObj =
+          jsxAttribute &&
+          isCss((jsxAttribute.node as any).name.name) &&
+          jsxExpressionContainer;
+
+        const isExtractedCssObj =
           isCallExpression(nodePath?.parentPath?.parentPath?.node) &&
-          isCss((nodePath?.parentPath?.parentPath?.node.callee as any).name) &&
-          (isStringLiteral(nodePath.node.value) ||
-            isNumericLiteral(nodePath.node.value))
-        ) {
-          const name = (nodePath.node.key as any).name;
-          const value = nodePath.node.value;
-          const mapping = opts.mapping;
+          isCss((nodePath?.parentPath?.parentPath?.node.callee as any).name);
 
-          if (name === "color" && mapping[name][value.value]) {
-            nodePath.replaceWith(
-              objectProperty(
-                identifier(name),
-                createMemberExpression(mapping[name][value.value]),
-              ),
-            );
-            return;
-          }
+        const isStringOrNumberValue =
+          isStringLiteral(nodePath.node.value) ||
+          isNumericLiteral(nodePath.node.value);
 
-          if (mapping[name]) {
-            nodePath.replaceWith(
-              objectProperty(
-                identifier(name),
-                createMemberExpression(mapping[name]),
-              ),
-            );
-          }
+        if ((isInlineCssObj || isExtractedCssObj) && isStringOrNumberValue) {
+          handleCssProperties(nodePath, opts);
         }
       },
     },

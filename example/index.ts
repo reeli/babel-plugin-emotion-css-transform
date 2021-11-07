@@ -27,6 +27,10 @@ const mapping: { [key: string]: any } = {
 const transformFile = (fileName: string) => {
   fs.readFile(fileName, (_, data) => {
     const content = data.toString("utf-8");
+    // Should not handle the content ff the file is empty
+    if (!content) {
+      return;
+    }
     const code = transform(content, {
       plugins: ["@babel/plugin-syntax-jsx", [emotionCssTransform, { mapping }]],
     })!.code;

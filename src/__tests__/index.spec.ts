@@ -3,18 +3,29 @@ import emotionCssTransform from "../";
 
 const cases = [
   {
-    title: "Annotated #__PURE__",
-    src: `<div css={{}} />`,
-    dest: ``,
+    title: "Should handle inline css definition",
+    src: `<div css={{fontSize: 12}} />`,
+    dest: `<div css={theme => ({fontSize: theme.fontSize})} />;`,
+  },
+  {
+    title: "Should handle extracted css definition",
+    src: `<div css={divStyles} />;const divStyles = css({fontSize: 12});`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize});`,
+  },
+  {
+    title: "Should handle extracted css definition",
+    src: `<div css={divStyles} />;const divStyles = css({fontSize: 12});`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize});`,
+  },
+  {
+    title: "Should not throw error if the jsx attribute has no value",
+    src: `<div isValid />`,
+    dest: `<div isValid />;`,
   },
 ];
 
-function unPad(str: string) {
-  return str.replace(/^\n+|\n+$/, "").replace(/\n+/g, "\n");
-}
-
 const mapping: { [key: string]: any } = {
-  fontSize: "theme.fontSize.color.red",
+  fontSize: "theme.fontSize",
   radius: "theme.radius",
   color: {
     red: "theme.colors.primary",
@@ -23,44 +34,21 @@ const mapping: { [key: string]: any } = {
   },
 };
 
-test("debug", () => {
-  const src = transform(
-    `
-import { css } from "@emotion/react";
+function unPad(str: string) {
+  return str.replace(/\n+|$/gi, "").replace(/(\(\{)(\s+)/gi, "$1");
+}
 
-const Comp = () => (
-  <div css={containerStyles} role="hello">
-    children
-  </div>
-);
-
-const containerStyles = css({
-  display: "block",
-  color: "red",
-  fontSize: 12,
-  fontWeight: "bold",
-  radius:4
-});
-    `,
-    {
-      plugins: ["@babel/plugin-syntax-jsx", [emotionCssTransform, { mapping }]],
-    },
-  )!.code;
-
-  console.log(src);
-});
-
-xdescribe("test cases", () => {
+describe("test cases", () => {
   cases.forEach((caseItem) => {
     ((caseItem as any).only ? it.only : it)(caseItem.title, () => {
       const src = transform(caseItem.src, {
-        plugins: ["@babel/plugin-syntax-jsx", emotionCssTransform],
+        plugins: [
+          "@babel/plugin-syntax-jsx",
+          [emotionCssTransform, { mapping }],
+        ],
       })!.code;
 
-      const dest = transform(caseItem.dest, {
-        plugins: ["@babel/plugin-syntax-dynamic-import"],
-      })!.code;
-      expect(unPad(src || "")).toEqual(unPad(dest || ""));
+      expect(unPad(src!)).toEqual(unPad(caseItem.dest));
     });
   });
 });
