@@ -28,7 +28,8 @@ const containerStyles = css({
   display: "block",
   color: "red",
   fontSize: 12,
-  fontWeight: "bold"
+  fontWeight: "bold",
+  radius:4
 });
     `,
     {

@@ -19,7 +19,6 @@ import {
   objectProperty,
   memberExpression,
   isNumericLiteral,
-  Identifier,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -49,9 +48,24 @@ const mapping: { [key: string]: string } = {
 
 const createMemberExpression = (keyPath: string) => {
   const list = keyPath.split(".");
-  const identifierList: Identifier[] = list.map((v) => identifier(v));
 
-  return memberExpression(identifierList[0], identifierList[1]);
+  const fn = (data: string[]): any => {
+    const lastItem = data[data.length - 1];
+    const itemsWithoutLast = data.filter(
+      (_, idx: number) => idx < data.length - 1,
+    );
+
+    if (itemsWithoutLast.length === 1) {
+      return memberExpression(
+        identifier(itemsWithoutLast[0]),
+        identifier(lastItem),
+      );
+    }
+
+    return memberExpression(fn(itemsWithoutLast), identifier(lastItem));
+  };
+
+  return fn(list);
 };
 
 export default () => ({
