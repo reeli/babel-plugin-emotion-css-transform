@@ -41,11 +41,6 @@ const createJsxAttribute = (name: string, value: Expression) => {
 
 const isCss = (name: unknown): name is string => name === "css";
 
-const mapping: { [key: string]: string } = {
-  fontSize: "theme.fontSize.color.red",
-  radius: "theme.radius",
-};
-
 const createMemberExpression = (keyPath: string) => {
   const list = keyPath.split(".");
 
@@ -66,6 +61,17 @@ const createMemberExpression = (keyPath: string) => {
   };
 
   return fn(list);
+};
+
+const mapping: { [key: string]: string } = {
+  fontSize: "theme.fontSize.color.red",
+  radius: "theme.radius",
+};
+
+const colorMapping: { [key: string]: string } = {
+  red: "theme.colors.primary",
+  blue: "theme.colors.secondary",
+  pink: "theme.colors.text.primary",
 };
 
 export default () => ({
@@ -104,6 +110,17 @@ export default () => ({
             isNumericLiteral(nodePath.node.value))
         ) {
           const name = (nodePath.node.key as any).name;
+          const value = nodePath.node.value;
+
+          if (name === "color" && colorMapping[value.value]) {
+            nodePath.replaceWith(
+              objectProperty(
+                identifier(name),
+                createMemberExpression(colorMapping[value.value]),
+              ),
+            );
+            return;
+          }
 
           if (mapping[name]) {
             nodePath.replaceWith(
