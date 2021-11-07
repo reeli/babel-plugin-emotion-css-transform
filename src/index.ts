@@ -13,6 +13,13 @@ import {
   parenthesizedExpression,
   isVariableDeclarator,
   CallExpression,
+  ObjectProperty,
+  isCallExpression,
+  isStringLiteral,
+  objectProperty,
+  memberExpression,
+  isNumericLiteral,
+  Identifier,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -22,15 +29,29 @@ const createParamWithType = (name: string, type: string) => {
   return id;
 };
 
-const createJsxAttribute = (name: string, value: Expression) => {
-  const id = createParamWithType("theme", "Theme");
+const themeWithType = createParamWithType("theme", "Theme");
 
+const createJsxAttribute = (name: string, value: Expression) => {
   return jsxAttribute(
     jsxIdentifier(name),
     jsxExpressionContainer(
-      arrowFunctionExpression([id], parenthesizedExpression(value!)),
+      arrowFunctionExpression([themeWithType], parenthesizedExpression(value!)),
     ),
   );
+};
+
+const isCss = (name: unknown): name is string => name === "css";
+
+const mapping: { [key: string]: string } = {
+  fontSize: "theme.fontSize.color.red",
+  radius: "theme.radius",
+};
+
+const createMemberExpression = (keyPath: string) => {
+  const list = keyPath.split(".");
+  const identifierList: Identifier[] = list.map((v) => identifier(v));
+
+  return memberExpression(identifierList[0], identifierList[1]);
 };
 
 export default () => ({
@@ -41,7 +62,7 @@ export default () => ({
         const attributeName = nodePath.node.name.name;
         const valueExpression = (nodePath.node.value as any).expression;
 
-        if (attributeName === "css" && isObjectExpression(valueExpression)) {
+        if (isCss(attributeName) && isObjectExpression(valueExpression)) {
           nodePath.replaceWith(
             createJsxAttribute(attributeName, valueExpression),
           );
@@ -51,12 +72,33 @@ export default () => ({
     CallExpression: {
       enter(nodePath: NodePath<CallExpression>) {
         if (
-          (nodePath.node.callee as any).name === "css" &&
+          isCss((nodePath.node.callee as any).name) &&
           isVariableDeclarator(nodePath.parentPath?.node)
         ) {
-          const id = createParamWithType("theme", "Theme");
+          nodePath.replaceWith(
+            arrowFunctionExpression([themeWithType], nodePath.node),
+          );
+        }
+      },
+    },
+    ObjectProperty: {
+      enter(nodePath: NodePath<ObjectProperty>) {
+        if (
+          isCallExpression(nodePath?.parentPath?.parentPath?.node) &&
+          isCss((nodePath?.parentPath?.parentPath?.node.callee as any).name) &&
+          (isStringLiteral(nodePath.node.value) ||
+            isNumericLiteral(nodePath.node.value))
+        ) {
+          const name = (nodePath.node.key as any).name;
 
-          nodePath.replaceWith(arrowFunctionExpression([id], nodePath.node));
+          if (mapping[name]) {
+            nodePath.replaceWith(
+              objectProperty(
+                identifier(name),
+                createMemberExpression(mapping[name]),
+              ),
+            );
+          }
         }
       },
     },
