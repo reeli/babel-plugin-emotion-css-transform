@@ -11,11 +11,12 @@
     "esModuleInterop": true,
     "strict": true,
     "target": "es2015",
-    "sourceMap": true,
+    "sourceMap": false,
     "skipLibCheck": true
   },
   "exclude": [
     "node_modules/*",
-    "lib/*"
+    "example/*",
+    "**/*.spec.ts"
   ]
 }
