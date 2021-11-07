@@ -16,7 +16,7 @@ function unPad(str: string) {
 test("debug", () => {
   const src = transform(
     `
-   import { css } from "@emotion/react";
+import { css } from "@emotion/react";
 
 const Comp = () => (
   <div css={containerStyles} role="hello">
@@ -40,7 +40,7 @@ const containerStyles = css({
   console.log(src);
 });
 
-describe("test cases", () => {
+xdescribe("test cases", () => {
   cases.forEach((caseItem) => {
     ((caseItem as any).only ? it.only : it)(caseItem.title, () => {
       const src = transform(caseItem.src, {

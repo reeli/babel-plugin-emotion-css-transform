@@ -1,6 +1,6 @@
 {
-  "name": "babel-plugin-pure-calls-annotation",
-  "version": "0.4.2",
+  "name": "babel-plugin-emotion-css-transform",
+  "version": "0.1.0",
   "main": "lib/index.js",
   "types": "src/index.ts",
   "files": [
@@ -8,7 +8,7 @@
     "src"
   ],
   "license": "WTFPL",
-  "author": "Morlay Null <morlay.null@gmail.com>",
+  "author": "reeli <reeli.null@gmail.com>",
   "scripts": {
     "prepublishOnly": "make build"
   },
@@ -53,10 +53,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/morlay/babel-plugin-pure-calls-annotation.git"
+    "url": "git+https://github.com/reeli/babel-plugin-emotion-css-transform.git"
   },
   "bugs": {
-    "url": "https://github.com/morlay/babel-plugin-pure-calls-annotation/issues"
+    "url": "https://github.com/reeli/babel-plugin-emotion-css-transform/issues"
   },
-  "homepage": "https://github.com/morlay/babel-plugin-pure-calls-annotation#readme"
+  "homepage": "https://github.com/reeli/babel-plugin-emotion-css-transform#readme"
 }
