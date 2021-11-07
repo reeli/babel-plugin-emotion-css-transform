@@ -18,9 +18,9 @@ const mapping: { [key: string]: any } = {
   fontSize: "theme.fontSize.color.red",
   radius: "theme.radius",
   color: {
-    red: "theme.colors.primary",
-    blue: "theme.colors.secondary",
-    pink: "theme.colors.text.primary",
+    red: "theme.color.primary",
+    blue: "theme.color.secondary",
+    pink: "theme.color.text.primary",
   },
 };
 

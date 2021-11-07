@@ -18,6 +18,16 @@ const cases = [
     dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize});`,
   },
   {
+    title: "Should handle extracted css definition with color inside",
+    src: `<div css={divStyles} />;const divStyles = css({color: "red"});`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({color: theme.color.primary});`,
+  },
+  {
+    title: "Should the case when color is defined but not included in mapping",
+    src: `<div css={divStyles} />;const divStyles = css({color: "#ccc"});`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({color: "#ccc"});`,
+  },
+  {
     title: "Should not throw error if the jsx attribute has no value",
     src: `<div isValid />`,
     dest: `<div isValid />;`,
@@ -28,9 +38,9 @@ const mapping: { [key: string]: any } = {
   fontSize: "theme.fontSize",
   radius: "theme.radius",
   color: {
-    red: "theme.colors.primary",
-    blue: "theme.colors.secondary",
-    pink: "theme.colors.text.primary",
+    red: "theme.color.primary",
+    blue: "theme.color.secondary",
+    pink: "theme.color.text.primary",
   },
 };
 
