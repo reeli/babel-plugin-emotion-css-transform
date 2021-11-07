@@ -15,7 +15,22 @@ function unPad(str: string) {
 
 test("debug", () => {
   const src = transform(
-    "<div css={{display:'block', color: 'red', fontSize: 12, fontWeight: 'bold'}} role='hello'>children</div>",
+    `
+import { css } from "@emotion/react";
+
+const Comp = () => (
+  <div css={containerStyles} role="hello">
+    children
+  </div>
+);
+
+const containerStyles = css({
+  display: "block",
+  color: "red",
+  fontSize: 12,
+  fontWeight: "bold"
+});
+    `,
     {
       plugins: ["@babel/plugin-syntax-jsx", emotionCssTransform],
     },

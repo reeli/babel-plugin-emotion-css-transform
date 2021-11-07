@@ -11,6 +11,8 @@ import {
   tsTypeAnnotation,
   tSTypeReference,
   parenthesizedExpression,
+  isVariableDeclarator,
+  CallExpression,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -36,14 +38,25 @@ export default () => ({
   visitor: {
     JSXAttribute: {
       enter(nodePath: NodePath<JSXAttribute>) {
+        const attributeName = nodePath.node.name.name;
         const valueExpression = (nodePath.node.value as any).expression;
-        if (
-          nodePath.node.name.name === "css" &&
-          isObjectExpression(valueExpression)
-        ) {
+
+        if (attributeName === "css" && isObjectExpression(valueExpression)) {
           nodePath.replaceWith(
-            createJsxAttribute(nodePath.node.name.name, valueExpression),
+            createJsxAttribute(attributeName, valueExpression),
           );
+        }
+      },
+    },
+    CallExpression: {
+      enter(nodePath: NodePath<CallExpression>) {
+        if (
+          (nodePath.node.callee as any).name === "css" &&
+          isVariableDeclarator(nodePath.parentPath?.node)
+        ) {
+          const id = createParamWithType("theme", "Theme");
+
+          nodePath.replaceWith(arrowFunctionExpression([id], nodePath.node));
         }
       },
     },
