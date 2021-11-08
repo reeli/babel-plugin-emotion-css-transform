@@ -26,7 +26,7 @@ const cases = [
     title:
       "Should handle the case when color is defined but not included in mapping",
     src: `<div css={divStyles} />;const divStyles = css({color: "#ccc"});`,
-    dest: `<div css={divStyles} />;const divStyles = css({color: "#ccc"});`,
+    dest: `<div css={divStyles} />;const divStyles = () => css({color: "#ccc"});`,
   },
   {
     title: "Should handle the case when origin color is defined by variable",

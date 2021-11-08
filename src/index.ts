@@ -26,6 +26,7 @@ import {
   isMemberExpression,
   MemberExpression,
   isIdentifier,
+  Identifier,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -135,6 +136,25 @@ const handleCssProperties = (
   }
 };
 
+const hasSpecialIdentifier = (
+  nodePath: NodePath<CallExpression>,
+  name: string,
+): boolean => {
+  let flag = false;
+
+  nodePath.traverse({
+    Identifier: {
+      enter(nodePath: NodePath<Identifier>) {
+        if (nodePath.node.name === name) {
+          flag = true;
+        }
+      },
+    },
+  });
+
+  return flag;
+};
+
 export default () => ({
   name: "emotion-css-transform",
   visitor: {
@@ -152,13 +172,17 @@ export default () => ({
     },
     CallExpression: {
       exit(nodePath: NodePath<CallExpression>) {
-        // console.log((nodePath.node.arguments[0] as any).properties[0]);
         if (
           isCss((nodePath.node.callee as any).name) &&
           isVariableDeclarator(nodePath.parentPath?.node)
         ) {
           nodePath.replaceWith(
-            arrowFunctionExpression([themeWithType], nodePath.node),
+            arrowFunctionExpression(
+              hasSpecialIdentifier(nodePath, constants.theme)
+                ? [themeWithType]
+                : [],
+              nodePath.node,
+            ),
           );
         }
       },
