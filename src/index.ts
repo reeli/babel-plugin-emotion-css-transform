@@ -44,13 +44,17 @@ const createParamWithType = (name: string, type: string) => {
 
 const themeWithType = createParamWithType(constants.theme, constants.ThemeType);
 
-const createJsxAttribute = (name: string, value: Expression) => {
+const createJsxAttribute = (
+  name: string,
+  value: Expression,
+  wrapWithParenthesis = true,
+) => {
   return jsxAttribute(
     jsxIdentifier(name),
     jsxExpressionContainer(
       arrowFunctionExpression(
         [identifier(constants.theme)],
-        parenthesizedExpression(value!),
+        wrapWithParenthesis ? parenthesizedExpression(value!) : value,
       ),
     ),
   );
@@ -159,13 +163,15 @@ export default () => ({
   name: "emotion-css-transform",
   visitor: {
     JSXAttribute: {
-      exit(nodePath: NodePath<JSXAttribute>) {
+      enter(nodePath: NodePath<JSXAttribute>) {
         const attributeName = nodePath.node.name.name;
         const valueExpression = (nodePath.node?.value as any)?.expression;
+        const cssFnStyle = isCallExpression(valueExpression);
+        const objectStyle = isObjectExpression(valueExpression);
 
-        if (isCss(attributeName) && isObjectExpression(valueExpression)) {
+        if (isCss(attributeName) && (objectStyle || cssFnStyle)) {
           nodePath.replaceWith(
-            createJsxAttribute(attributeName, valueExpression),
+            createJsxAttribute(attributeName, valueExpression, !cssFnStyle),
           );
         }
       },
@@ -202,9 +208,10 @@ export default () => ({
           isCss((jsxAttribute.node as any).name.name) &&
           jsxExpressionContainer;
 
-        const isExtractedCssObj =
-          isCallExpression(nodePath?.parentPath?.parentPath?.node) &&
-          isCss((nodePath?.parentPath?.parentPath?.node.callee as any).name);
+        const parent: any = nodePath.findParent((path) =>
+          isCallExpression(path),
+        );
+        const isExtractedCssObj = !!parent && isCss(parent.node.callee.name);
 
         const isStringOrNumberValue =
           isStringLiteral(nodePath.node.value) ||

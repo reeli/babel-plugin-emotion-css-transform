@@ -40,6 +40,26 @@ const cases = [
     dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
   },
   {
+    title: "Should handle extracted merged css object",
+    src: `<div css={divStyles} />;const divStyles = css({fontSize: fonts.h1}, customStyles, {color:"red"});`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1}, customStyles, {color: theme.color.primary});`,
+  },
+  {
+    title: "Should handle extracted merged css object with css function and []",
+    src: `<div css={divStyles} />;const divStyles = css(customStyles, [{ color: "red" }]);`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css(customStyles, [{ color: theme.color.primary}]);`,
+  },
+  {
+    title: "Should handle extracted merged css object with only []",
+    src: `<div css={divStyles} />;const divStyles = css([{ color: "red" }]);`,
+    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css([{ color: theme.color.primary}]);`,
+  },
+  {
+    title: "Should handle inline merged css object",
+    src: `<div css={css({color:"red"}, customStyles)} />;`,
+    dest: `<div css={theme => css({color: theme.color.primary}, customStyles)} />;`,
+  },
+  {
     title: "Should not throw error if the jsx attribute has no value",
     src: `<div isValid />`,
     dest: `<div isValid />;`,
@@ -59,7 +79,10 @@ const mapping: { [key: string]: any } = {
 };
 
 function unPad(str: string) {
-  return str.replace(/\n+|$/gi, "").replace(/(\(\{)(\s+)/gi, "$1");
+  return str
+    .replace(/\n+|$/gi, "")
+    .replace(/(\(\{)(\s+)/gi, "$1")
+    .replace(/(\{)(\s+)/gi, "$1");
 }
 
 describe("test cases", () => {
