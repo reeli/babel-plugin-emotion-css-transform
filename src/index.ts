@@ -27,6 +27,7 @@ import {
   MemberExpression,
   isIdentifier,
   Identifier,
+  isArrayExpression,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -166,12 +167,16 @@ export default () => ({
       enter(nodePath: NodePath<JSXAttribute>) {
         const attributeName = nodePath.node.name.name;
         const valueExpression = (nodePath.node?.value as any)?.expression;
-        const cssFnStyle = isCallExpression(valueExpression);
-        const objectStyle = isObjectExpression(valueExpression);
+        const isCssFnStyle = isCallExpression(valueExpression);
+        const isObjectStyle = isObjectExpression(valueExpression);
+        const isArrayStyle = isArrayExpression(valueExpression);
 
-        if (isCss(attributeName) && (objectStyle || cssFnStyle)) {
+        if (
+          isCss(attributeName) &&
+          (isObjectStyle || isArrayStyle || isCssFnStyle)
+        ) {
           nodePath.replaceWith(
-            createJsxAttribute(attributeName, valueExpression, !cssFnStyle),
+            createJsxAttribute(attributeName, valueExpression, isObjectStyle),
           );
         }
       },

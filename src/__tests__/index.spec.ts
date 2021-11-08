@@ -60,6 +60,16 @@ const cases = [
     dest: `<div css={theme => css({color: theme.color.primary}, customStyles)} />;`,
   },
   {
+    title: "Should handle inline merged css object with css function and []",
+    src: `<div css={css(customStyles, [{ color: "red" }])} />`,
+    dest: `<div css={theme => css(customStyles, [{ color: theme.color.primary}])} />;`,
+  },
+  {
+    title: "Should handle extracted merged css object with only []",
+    src: `<div css={[{ color: "red" }]} />;`,
+    dest: `<div css={theme => [{ color: theme.color.primary}]} />;`,
+  },
+  {
     title: "Should not throw error if the jsx attribute has no value",
     src: `<div isValid />`,
     dest: `<div isValid />;`,
