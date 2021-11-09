@@ -65,6 +65,17 @@ const cases = [
     dest: `<div css={theme => [{ color: theme.color.primary}]} />;`,
   },
   {
+    title:
+      "Should replace colors for everywhere if the colors variable is used",
+    src: `<div css={{ background: colors.red, borderColor: colors.pink, fill: colors.blue  }} />;`,
+    dest: `<div css={theme => ({ background: theme.color.primary, borderColor: theme.color.text.primary, fill: theme.color.secondary})} />;`,
+  },
+  {
+    title: "Should handle shorthanded css values",
+    src: "<div css={[{ border: `1px solid ${colors.pink}` }]} />;",
+    dest: "<div css={theme => [{ border: `1px solid ${theme.color.text.primary}`}]} />;",
+  },
+  {
     title: "Should not throw error if the jsx attribute has no value",
     src: `<div isValid />`,
     dest: `<div isValid />;`,
@@ -86,7 +97,8 @@ function unPad(str: string) {
   return str
     .replace(/\n+|$/gi, "")
     .replace(/(\(\{)(\s+)/gi, "$1")
-    .replace(/(\{)(\s+)/gi, "$1");
+    .replace(/(\{)(\s+)/gi, "$1")
+    .replace(/(\,)(\s+)/gi, "$1");
 }
 
 describe("test cases", () => {

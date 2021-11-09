@@ -6,12 +6,9 @@ import {
   tSTypeReference,
   isVariableDeclarator,
   CallExpression,
-  ObjectProperty,
   isCallExpression,
-  objectProperty,
   memberExpression,
   isJSXAttribute,
-  isJSXExpressionContainer,
   JSXAttribute,
   isObjectExpression,
   Expression,
@@ -104,21 +101,15 @@ const pickerAllIdentifierName = (data: MemberExpression) => {
   ].join(".");
 };
 
-const handleCssProperties = (
-  nodePath: NodePath<ObjectProperty>,
+const handleMemberExpression = (
+  nodePath: NodePath<MemberExpression>,
   keyPath: string,
   opts: { mapping: { [key: string]: any } },
 ) => {
-  const name = (nodePath.node.key as any).name;
   const mapping = opts.mapping;
 
   if (mapping[keyPath]) {
-    nodePath.replaceWith(
-      objectProperty(
-        identifier(name),
-        createMemberExpression(mapping[keyPath]),
-      ),
-    );
+    nodePath.replaceWith(createMemberExpression(mapping[keyPath]));
   }
 };
 
@@ -179,16 +170,11 @@ export default () => ({
         }
       },
     },
-    ObjectProperty: {
-      enter(nodePath: NodePath<ObjectProperty>, { opts }: any) {
+    MemberExpression: {
+      enter(nodePath: NodePath<MemberExpression>, { opts }: any) {
         const jsxAttribute = nodePath.findParent((path) =>
           isJSXAttribute(path),
         );
-
-        const jsxExpressionContainer = nodePath.findParent((path) =>
-          isJSXExpressionContainer(path),
-        );
-
         const isInlineCssObj =
           jsxAttribute &&
           isCss((jsxAttribute.node as any).name.name) &&
@@ -200,12 +186,9 @@ export default () => ({
         const isExtractedCssObj = !!parent && isCss(parent.node.callee.name);
 
         if (isInlineCssObj || isExtractedCssObj) {
-          if (isMemberExpression(nodePath.node.value)) {
-            const keyPath = pickerAllIdentifierName(nodePath.node.value);
-            if (!keyPath.startsWith(constants.theme)) {
-              return handleCssProperties(nodePath, keyPath, opts);
-            }
-            return;
+          const keyPath = pickerAllIdentifierName(nodePath.node);
+          if (!keyPath.startsWith(constants.theme)) {
+            return handleMemberExpression(nodePath, keyPath, opts);
           }
         }
       },
