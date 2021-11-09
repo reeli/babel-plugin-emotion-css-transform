@@ -8,14 +8,10 @@ import {
   CallExpression,
   ObjectProperty,
   isCallExpression,
-  isStringLiteral,
   objectProperty,
   memberExpression,
-  isNumericLiteral,
   isJSXAttribute,
   isJSXExpressionContainer,
-  StringLiteral,
-  NumericLiteral,
   JSXAttribute,
   isObjectExpression,
   Expression,
@@ -116,28 +112,10 @@ const handleCssProperties = (
   const name = (nodePath.node.key as any).name;
   const mapping = opts.mapping;
 
-  if (name === "color" && mapping[name][value]) {
-    nodePath.replaceWith(
-      objectProperty(
-        identifier(name),
-        createMemberExpression(mapping[name][value]),
-      ),
-    );
-    return;
-  }
-
-  if (name !== "color" && mapping[value]) {
+  if (mapping[value]) {
     nodePath.replaceWith(
       objectProperty(identifier(name), createMemberExpression(mapping[value])),
     );
-    return;
-  }
-
-  if (name !== "color" && mapping[name]) {
-    nodePath.replaceWith(
-      objectProperty(identifier(name), createMemberExpression(mapping[name])),
-    );
-    return;
   }
 };
 
@@ -218,16 +196,7 @@ export default () => ({
         );
         const isExtractedCssObj = !!parent && isCss(parent.node.callee.name);
 
-        const isStringOrNumberValue =
-          isStringLiteral(nodePath.node.value) ||
-          isNumericLiteral(nodePath.node.value);
-
         if (isInlineCssObj || isExtractedCssObj) {
-          if (isStringOrNumberValue) {
-            const value = nodePath.node.value as StringLiteral | NumericLiteral;
-            return handleCssProperties(nodePath, value.value as string, opts);
-          }
-
           if (isMemberExpression(nodePath.node.value)) {
             const val = pickerAllIdentifierName(nodePath.node.value);
             if (!val.startsWith(constants.theme)) {
