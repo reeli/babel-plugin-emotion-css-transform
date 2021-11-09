@@ -71,6 +71,11 @@ const cases = [
     dest: `<div css={theme => ({ background: theme.color.primary, borderColor: theme.color.text.primary, fill: theme.color.secondary})} />;`,
   },
   {
+    title: "Should handle TemplateLiteral css values",
+    src: "<div css={customStyles} />;const customStyles = css({ backgroundImage: `url(${someUrl}), linear-gradient(top top right, ${colors.blue},${colors.red})` });",
+    dest: "<div css={customStyles} />;const customStyles = (theme: Theme) => css({ backgroundImage: `url(${someUrl}), linear-gradient(top top right, ${theme.color.secondary},${theme.color.primary})`});",
+  },
+  {
     title: "Should handle shorthanded css values",
     src: "<div css={[{ border: `1px solid ${colors.pink}` }]} />;",
     dest: "<div css={theme => [{ border: `1px solid ${theme.color.text.primary}`}]} />;",
@@ -94,11 +99,7 @@ const mapping: { [key: string]: any } = {
 };
 
 function unPad(str: string) {
-  return str
-    .replace(/\n+|$/gi, "")
-    .replace(/(\(\{)(\s+)/gi, "$1")
-    .replace(/(\{)(\s+)/gi, "$1")
-    .replace(/(\,)(\s+)/gi, "$1");
+  return str.replace(/\s+/gi, "");
 }
 
 describe("test cases", () => {
