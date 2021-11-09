@@ -106,15 +106,18 @@ const pickerAllIdentifierName = (data: MemberExpression) => {
 
 const handleCssProperties = (
   nodePath: NodePath<ObjectProperty>,
-  value: string,
+  keyPath: string,
   opts: { mapping: { [key: string]: any } },
 ) => {
   const name = (nodePath.node.key as any).name;
   const mapping = opts.mapping;
 
-  if (mapping[value]) {
+  if (mapping[keyPath]) {
     nodePath.replaceWith(
-      objectProperty(identifier(name), createMemberExpression(mapping[value])),
+      objectProperty(
+        identifier(name),
+        createMemberExpression(mapping[keyPath]),
+      ),
     );
   }
 };
@@ -198,10 +201,11 @@ export default () => ({
 
         if (isInlineCssObj || isExtractedCssObj) {
           if (isMemberExpression(nodePath.node.value)) {
-            const val = pickerAllIdentifierName(nodePath.node.value);
-            if (!val.startsWith(constants.theme)) {
-              return handleCssProperties(nodePath, val, opts);
+            const keyPath = pickerAllIdentifierName(nodePath.node.value);
+            if (!keyPath.startsWith(constants.theme)) {
+              return handleCssProperties(nodePath, keyPath, opts);
             }
+            return;
           }
         }
       },
