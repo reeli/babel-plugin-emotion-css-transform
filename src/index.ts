@@ -21,6 +21,7 @@ import {
   isIdentifier,
   Identifier,
   isArrayExpression,
+  isLiteral,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -87,6 +88,10 @@ const pickerAllIdentifierName = (data: MemberExpression) => {
 
   const pick = (data: MemberExpression) => {
     const final = [];
+
+    if (isLiteral(data.property)) {
+      final.unshift((data.property as any).value);
+    }
 
     if (isIdentifier(data.object)) {
       final.unshift(data.object.name);

@@ -13,6 +13,22 @@ const cases = [
     dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
   },
   {
+    title: "Should handle obj.a",
+    src: `const divStyles = css({fontSize: fonts.h1});`,
+    dest: `const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
+  },
+  {
+    title: "Should handle obj['a']",
+    src: `const divStyles = css({fontSize: fonts["h1"]});`,
+    dest: `const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
+  },
+  {
+    only: "should handle obj['a'].b",
+    title: "Should handle extracted css definition",
+    src: `const divStyles = css({margin: spacing['common'].xs});`,
+    dest: `const divStyles = (theme: Theme) => css({margin: theme.spacing.xs});`,
+  },
+  {
     title: "Should handle extracted css definition with color inside",
     src: `<div css={divStyles} />;const divStyles = css({color: colors.red});`,
     dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({color: theme.color.primary});`,
@@ -96,6 +112,7 @@ const mapping: { [key: string]: any } = {
   "colors.pink": "theme.color.text.primary",
   "radius.xs": "theme.radius.xs",
   "radius.sm": "theme.radius.sm",
+  "spacing.common.xs": "theme.spacing.xs",
 };
 
 function unPad(str: string) {
