@@ -13,6 +13,11 @@ const cases = [
     dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
   },
   {
+    title: "Multiple styles in one css function",
+    src: `const divStyles = css({h1: {fontSize: fonts.h1}, h2: {color: colors.red}});`,
+    dest: `const divStyles = (theme: Theme) => css({h1: {fontSize: theme.fontSize.h1}, h2: {color: theme.color.primary}});`,
+  },
+  {
     title: "Should handle obj.a",
     src: `const divStyles = css({fontSize: fonts.h1});`,
     dest: `const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
