@@ -18,10 +18,8 @@ import {
   parenthesizedExpression,
   isMemberExpression,
   MemberExpression,
-  isIdentifier,
   Identifier,
   isArrayExpression,
-  isLiteral,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -79,31 +77,16 @@ const createMemberExpression = (keyPath: string) => {
   return fn(list);
 };
 
-const pickerAllIdentifierName = (data: MemberExpression) => {
-  const res = [];
+const pickerAllIdentifierName = (node: MemberExpression): string[] => {
+  const obj = (node.object as Identifier)?.name || (node.object as any)?.value;
+  const prop =
+    (node.property as Identifier).name || (node.property as any).value;
 
-  if (isIdentifier(data.property)) {
-    res.push(data.property.name);
+  if (isMemberExpression(node.object)) {
+    return [...pickerAllIdentifierName(node.object), prop];
   }
 
-  const pick = (data: MemberExpression) => {
-    const final = [];
-
-    if (isLiteral(data.property)) {
-      final.unshift((data.property as any).value);
-    }
-
-    if (isIdentifier(data.object)) {
-      final.unshift(data.object.name);
-    }
-
-    return final;
-  };
-
-  return [
-    ...pick(isMemberExpression(data.object) ? data.object : data),
-    ...res,
-  ].join(".");
+  return [obj, prop];
 };
 
 const handleMemberExpression = (
@@ -191,7 +174,7 @@ export default () => ({
         const isExtractedCssObj = !!parent && isCss(parent.node.callee.name);
 
         if (isInlineCssObj || isExtractedCssObj) {
-          const keyPath = pickerAllIdentifierName(nodePath.node);
+          const keyPath = pickerAllIdentifierName(nodePath.node).join(".");
           if (!keyPath.startsWith(constants.theme)) {
             return handleMemberExpression(nodePath, keyPath, opts);
           }

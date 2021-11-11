@@ -23,9 +23,18 @@ const cases = [
     dest: `const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
   },
   {
-    only: "should handle obj['a'].b",
-    title: "Should handle extracted css definition",
+    title: "should handle obj['a'].b",
     src: `const divStyles = css({margin: spacing['common'].xs});`,
+    dest: `const divStyles = (theme: Theme) => css({margin: theme.spacing.xs});`,
+  },
+  {
+    title: "should handle obj.a.b",
+    src: `const divStyles = css({margin: spacing.common.xs});`,
+    dest: `const divStyles = (theme: Theme) => css({margin: theme.spacing.xs});`,
+  },
+  {
+    title: "should handle obj['a']['b']",
+    src: `const divStyles = css({margin: spacing['common']['xs']});`,
     dest: `const divStyles = (theme: Theme) => css({margin: theme.spacing.xs});`,
   },
   {
