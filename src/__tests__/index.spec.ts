@@ -8,6 +8,11 @@ const cases = [
     dest: `<div css={theme => ({fontSize: theme.fontSize.h1})} />;`,
   },
   {
+    title: "Should handle inline css without any matched theme",
+    src: `<div css={{fontSize: 12}} />`,
+    dest: `<div css={() => ({fontSize: 12})} />;`,
+  },
+  {
     title: "Should handle extracted css definition",
     src: `<div css={divStyles} />;const divStyles = css({fontSize: fonts.h1});`,
     dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
@@ -113,7 +118,7 @@ const cases = [
   {
     title: "Should handle inline theme function",
     src: "<div css={(theme: Theme) => ({color: theme.colors.pink, background: colors.red})} />;",
-    dest: "<div css={theme => ({color: theme.colors.pink, background: theme.colors.pink})} />;",
+    dest: "<div css={(theme: Theme) => ({color: theme.colors.pink, background: theme.color.primary})} />;",
   },
   {
     title: "Should not throw error if the jsx attribute has no value",
@@ -143,7 +148,7 @@ describe("test cases", () => {
     ((caseItem as any).only ? it.only : it)(caseItem.title, () => {
       const src = transform(caseItem.src, {
         plugins: [
-          ["@babel/plugin-transform-typescript", { isTSX: true }],
+          ["@babel/plugin-syntax-typescript", { isTSX: true }],
           [emotionCssTransform, { mapping }],
         ],
       })!.code;

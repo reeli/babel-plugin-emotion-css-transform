@@ -41,12 +41,13 @@ const createJsxAttribute = (
   name: string,
   value: Expression,
   wrapWithParenthesis = true,
+  flag?: boolean,
 ) => {
   return jsxAttribute(
     jsxIdentifier(name),
     jsxExpressionContainer(
       arrowFunctionExpression(
-        [identifier(constants.theme)],
+        flag ? [identifier(constants.theme)] : [],
         wrapWithParenthesis ? parenthesizedExpression(value!) : value,
       ),
     ),
@@ -102,7 +103,7 @@ const handleMemberExpression = (
 };
 
 const hasSpecialIdentifier = (
-  nodePath: NodePath<CallExpression>,
+  nodePath: NodePath<CallExpression | JSXAttribute>,
   name: string,
 ): boolean => {
   let flag = false;
@@ -124,7 +125,7 @@ export default () => ({
   name: "emotion-css-transform",
   visitor: {
     JSXAttribute: {
-      enter(nodePath: NodePath<JSXAttribute>) {
+      exit(nodePath: NodePath<JSXAttribute>) {
         const attributeName = nodePath.node.name.name;
         const valueExpression = (nodePath.node?.value as any)?.expression;
         const isCssFnStyle = isCallExpression(valueExpression);
@@ -135,8 +136,14 @@ export default () => ({
           isCss(attributeName) &&
           (isObjectStyle || isArrayStyle || isCssFnStyle)
         ) {
+          const flag = hasSpecialIdentifier(nodePath, constants.theme);
           nodePath.replaceWith(
-            createJsxAttribute(attributeName, valueExpression, isObjectStyle),
+            createJsxAttribute(
+              attributeName,
+              valueExpression,
+              isObjectStyle,
+              flag,
+            ),
           );
         }
       },

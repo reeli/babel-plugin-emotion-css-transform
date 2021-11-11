@@ -15,7 +15,7 @@
   "devDependencies": {
     "@babel/core": "~7.15.0",
     "@babel/plugin-syntax-dynamic-import": "7.x",
-    "@babel/plugin-transform-typescript": "^7.16.1",
+    "@babel/plugin-syntax-typescript": "^7.16.0",
     "@types/babel__core": "~7.1.15",
     "@types/babel__traverse": "~7.14.2",
     "@types/jest": "~27.0.1",
