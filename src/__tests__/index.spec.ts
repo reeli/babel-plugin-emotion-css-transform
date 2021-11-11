@@ -111,6 +111,11 @@ const cases = [
     dest: "<div css={theme => [{ border: `1px solid ${theme.color.text.primary}`}]} />;",
   },
   {
+    title: "Should handle inline theme function",
+    src: "<div css={(theme: Theme) => ({color: theme.colors.pink, background: colors.red})} />;",
+    dest: "<div css={theme => ({color: theme.colors.pink, background: theme.colors.pink})} />;",
+  },
+  {
     title: "Should not throw error if the jsx attribute has no value",
     src: `<div isValid />`,
     dest: `<div isValid />;`,
@@ -138,7 +143,7 @@ describe("test cases", () => {
     ((caseItem as any).only ? it.only : it)(caseItem.title, () => {
       const src = transform(caseItem.src, {
         plugins: [
-          "@babel/plugin-syntax-jsx",
+          ["@babel/plugin-transform-typescript", { isTSX: true }],
           [emotionCssTransform, { mapping }],
         ],
       })!.code;
