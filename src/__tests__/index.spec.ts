@@ -121,6 +121,20 @@ const cases = [
     dest: "<div css={(theme: Theme) => ({color: theme.colors.pink, background: theme.color.primary})} />;",
   },
   {
+    only: true,
+    title: "Should handle css with variable",
+    src: `
+      const buttonStyleVariant = {orange: css({fontSize: fonts.h1})};
+      const buttonStyles = variant ? css(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
+      <div css={css(buttonStyles, disabled ? disableButtonStyles: null)} />;
+  `,
+    dest: `
+      const buttonStyleVariant = {orange: (theme: Theme) => css({fontSize: theme.fontSize.h1})};
+      const buttonStyles = variant ? css(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
+      <div css={(theme: Theme) => applyTheme(buttonStyles, disabled ? disableButtonStyles: null)(theme)} />;
+  `,
+  },
+  {
     title: "Should not throw error if the jsx attribute has no value",
     src: `<div isValid />`,
     dest: `<div isValid />;`,
@@ -140,7 +154,8 @@ const mapping: { [key: string]: any } = {
 };
 
 function unPad(str: string) {
-  return str.replace(/\s+/gi, "");
+  return str;
+  // return str.replace(/\s+/gi, "");
 }
 
 describe("test cases", () => {
