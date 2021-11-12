@@ -1,19 +1,10 @@
 import fg from "fast-glob";
 import fs from "fs";
 import { transform } from "@babel/core";
-import emotionCssTransform from "../src";
 import path from "path";
 
 const source = ["demo/**/*.ts", "demo/**/*.tsx"];
 const ignore = ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**/*.ts"];
-
-fg(source, {
-  dot: true,
-  ignore,
-}).then((files) => {
-  files.forEach((fileName) => transformFile(fileName));
-});
-
 const mapping: { [key: string]: any } = {
   fontSize: "theme.fontSize.color.red",
   radius: "theme.radius",
@@ -21,9 +12,15 @@ const mapping: { [key: string]: any } = {
     red: "theme.color.primary",
     blue: "theme.color.secondary",
     pink: "theme.color.text.primary",
-    "colors.red": "theme.color.red",
   },
 };
+
+fg(source, {
+  dot: true,
+  ignore,
+}).then((files) => {
+  files.forEach((fileName) => transformFile(fileName));
+});
 
 const transformFile = (fileName: string) => {
   fs.readFile(fileName, (_, data) => {
@@ -33,7 +30,11 @@ const transformFile = (fileName: string) => {
       return;
     }
     const code = transform(content, {
-      plugins: ["@babel/plugin-syntax-jsx", [emotionCssTransform, { mapping }]],
+      babelrc: false,
+      plugins: [
+        ["@babel/plugin-syntax-typescript", { isTSX: true }],
+        ["babel-plugin-emotion-css-transform", { mapping }],
+      ],
     })!.code;
 
     if (code) {
