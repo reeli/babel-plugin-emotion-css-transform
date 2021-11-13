@@ -28,6 +28,7 @@ const constants = {
   theme: "theme",
   ThemeType: "Theme",
   css: "css",
+  applyThemeFn: "applyTheme",
 };
 
 const createParamWithType = (name: string, type: string) => {
@@ -132,13 +133,16 @@ export default () => ({
       exit(nodePath: NodePath<JSXAttribute>) {
         const attributeName = nodePath.node.name.name;
         const valueExpression = (nodePath.node?.value as any)?.expression;
-        const isCssFnStyle = isCallExpression(valueExpression);
+        const isFnStyle =
+          isCallExpression(valueExpression) &&
+          (valueExpression?.callee as any)?.name !== constants.applyThemeFn;
+
         const isObjectStyle = isObjectExpression(valueExpression);
         const isArrayStyle = isArrayExpression(valueExpression);
 
         if (
           isCss(attributeName) &&
-          (isObjectStyle || isArrayStyle || isCssFnStyle)
+          (isObjectStyle || isArrayStyle || isFnStyle)
         ) {
           const flag = hasSpecialIdentifier(nodePath, constants.theme);
           nodePath.replaceWith(
@@ -171,7 +175,10 @@ export default () => ({
           }
 
           nodePath.replaceWith(
-            callExpression(identifier("applyTheme"), nodePath.node.arguments),
+            callExpression(
+              identifier(constants.applyThemeFn),
+              nodePath.node.arguments,
+            ),
           );
         }
       },

@@ -150,8 +150,8 @@ const cases = [
   `,
     dest: `
       const buttonStyleVariant = {orange: (theme: Theme) => css({fontSize: theme.fontSize.h1})};
-      const buttonStyles = variant ? css(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
-      <div css={(theme: Theme) => applyTheme(buttonStyles, disabled ? disableButtonStyles: null)(theme)} />;
+      const buttonStyles = variant ? applyTheme(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
+      <div css={applyTheme(buttonStyles, disabled ? disableButtonStyles: null)} />;
   `,
   },
   {
