@@ -140,19 +140,34 @@ export default () => ({
         const isObjectStyle = isObjectExpression(valueExpression);
         const isArrayStyle = isArrayExpression(valueExpression);
 
-        if (
-          isCss(attributeName) &&
-          (isObjectStyle || isArrayStyle || isFnStyle)
-        ) {
-          const flag = hasSpecialIdentifier(nodePath, constants.theme);
-          nodePath.replaceWith(
-            createJsxAttribute(
-              attributeName,
-              valueExpression,
-              isObjectStyle,
-              flag,
-            ),
-          );
+        if (isCss(attributeName)) {
+          if (isObjectStyle || isFnStyle) {
+            const flag = hasSpecialIdentifier(nodePath, constants.theme);
+            nodePath.replaceWith(
+              createJsxAttribute(
+                attributeName,
+                valueExpression,
+                isObjectStyle,
+                flag,
+              ),
+            );
+            return;
+          }
+
+          if (isArrayStyle) {
+            nodePath.replaceWith(
+              jsxAttribute(
+                jsxIdentifier(attributeName),
+                jsxExpressionContainer(
+                  callExpression(
+                    identifier(constants.applyThemeFn),
+                    valueExpression.elements as any,
+                  ),
+                ),
+              ),
+            );
+            return;
+          }
         }
       },
     },

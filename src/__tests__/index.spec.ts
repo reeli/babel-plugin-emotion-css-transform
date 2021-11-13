@@ -142,6 +142,16 @@ const cases = [
   `,
   },
   {
+    title: "extracted css object",
+    src: `const containerStyles = css({color: colors.red});`,
+    dest: `const containerStyles = (theme: Theme) => css({color: theme.color.primary});`,
+  },
+  {
+    title: "inline css array",
+    src: `<div css={[inputStyles, styles]}>test</div>;`,
+    dest: `<div css={applyTheme(inputStyles, styles)}>test</div>;`,
+  },
+  {
     title: "Should handle css with variable",
     src: `
       const buttonStyleVariant = {orange: css({fontSize: fonts.h1})};
