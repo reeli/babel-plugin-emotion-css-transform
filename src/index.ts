@@ -35,6 +35,7 @@ const constants = {
 };
 
 const APPLY_THEM_FN_PATH = "src/test.ts";
+const SHOULD_APPLY_THEME = "shouldApplyTheme";
 
 const createParamWithType = (name: string, type: string) => {
   const id = identifier(name);
@@ -131,123 +132,119 @@ const hasSpecialIdentifier = (
 const onlyObjectExpression = (list: any[]) =>
   list.every((v) => isObjectExpression(v));
 
-const importApplyThemeFn = (root: NodePath) => {
-  if (!root.scope.hasBinding(constants.applyThemeFn)) {
-    root.unshiftContainer(
-      // @ts-ignore
-      "body",
-      importDeclaration(
-        [importDefaultSpecifier(identifier("applyTheme"))],
-        stringLiteral(APPLY_THEM_FN_PATH),
-      ),
-    );
-  }
-};
-
-export default () => {
-  let root: NodePath;
-  return {
-    name: "emotion-css-transform",
-    visitor: {
-      Program(path: NodePath) {
-        root = path;
+export default () => ({
+  name: "emotion-css-transform",
+  visitor: {
+    Program: {
+      exit(root: NodePath, state: any) {
+        if (state.get(SHOULD_APPLY_THEME)) {
+          root.unshiftContainer(
+            // @ts-ignore
+            "body",
+            importDeclaration(
+              [importDefaultSpecifier(identifier("applyTheme"))],
+              stringLiteral(APPLY_THEM_FN_PATH),
+            ),
+          );
+        }
       },
-      JSXAttribute: {
-        exit(nodePath: NodePath<JSXAttribute>) {
-          const attributeName = nodePath.node.name.name;
-          const valueExpression = (nodePath.node?.value as any)?.expression;
-          const isFnStyle =
-            isCallExpression(valueExpression) &&
-            (valueExpression?.callee as any)?.name !== constants.applyThemeFn;
+    },
+    JSXAttribute: {
+      exit(nodePath: NodePath<JSXAttribute>, state: any) {
+        const attributeName = nodePath.node.name.name;
+        const valueExpression = (nodePath.node?.value as any)?.expression;
+        const isFnStyle =
+          isCallExpression(valueExpression) &&
+          (valueExpression?.callee as any)?.name !== constants.applyThemeFn;
 
-          const isObjectStyle = isObjectExpression(valueExpression);
-          const isArrayStyle = isArrayExpression(valueExpression);
+        const isObjectStyle = isObjectExpression(valueExpression);
+        const isArrayStyle = isArrayExpression(valueExpression);
 
-          if (isCss(attributeName)) {
-            if (isObjectStyle || isFnStyle) {
-              const flag = hasSpecialIdentifier(nodePath, constants.theme);
-              nodePath.replaceWith(
-                createJsxAttribute(
-                  attributeName,
-                  valueExpression,
-                  isObjectStyle,
-                  flag,
-                ),
-              );
-              return;
-            }
-
-            if (isArrayStyle) {
-              importApplyThemeFn(root);
-
-              nodePath.replaceWith(
-                jsxAttribute(
-                  jsxIdentifier(attributeName),
-                  jsxExpressionContainer(
-                    callExpression(
-                      identifier(constants.applyThemeFn),
-                      valueExpression.elements as any,
-                    ),
-                  ),
-                ),
-              );
-              return;
-            }
-          }
-        },
-      },
-      CallExpression: {
-        exit(nodePath: NodePath<CallExpression>) {
-          if (
-            isCss((nodePath.node.callee as any).name) &&
-            !isArrowFunctionExpression(nodePath.parentPath.node)
-          ) {
-            if (onlyObjectExpression(nodePath.node.arguments)) {
-              nodePath.replaceWith(
-                arrowFunctionExpression(
-                  hasSpecialIdentifier(nodePath, constants.theme)
-                    ? [themeWithType]
-                    : [],
-                  nodePath.node,
-                ),
-              );
-              return;
-            }
-
-            importApplyThemeFn(root);
-
+        if (isCss(attributeName)) {
+          if (isObjectStyle || isFnStyle) {
+            const flag = hasSpecialIdentifier(nodePath, constants.theme);
             nodePath.replaceWith(
-              callExpression(
-                identifier(constants.applyThemeFn),
-                nodePath.node.arguments,
+              createJsxAttribute(
+                attributeName,
+                valueExpression,
+                isObjectStyle,
+                flag,
               ),
             );
+            return;
           }
-        },
-      },
-      MemberExpression: {
-        enter(nodePath: NodePath<MemberExpression>, { opts }: any) {
-          const jsxAttribute = nodePath.findParent((path) =>
-            isJSXAttribute(path),
-          );
-          const isInlineCssObj =
-            jsxAttribute &&
-            isCss((jsxAttribute.node as any).name.name) &&
-            jsxExpressionContainer;
 
-          const parent: any = nodePath.findParent((path) =>
-            isCallExpression(path),
-          );
-          const isExtractedCssObj = !!parent && isCss(parent.node.callee.name);
+          if (isArrayStyle) {
+            state.set(SHOULD_APPLY_THEME, true);
 
-          if (isInlineCssObj || isExtractedCssObj) {
-            const keyPath = pickerAllIdentifierName(nodePath.node).join(".");
-            if (!keyPath.startsWith(constants.theme)) {
-              return handleMemberExpression(nodePath, keyPath, opts);
-            }
+            nodePath.replaceWith(
+              jsxAttribute(
+                jsxIdentifier(attributeName),
+                jsxExpressionContainer(
+                  callExpression(
+                    identifier(constants.applyThemeFn),
+                    valueExpression.elements as any,
+                  ),
+                ),
+              ),
+            );
+
+            return;
           }
-        },
+        }
       },
-    } as Visitor,
-  };
-};
+    },
+    CallExpression: {
+      exit(nodePath: NodePath<CallExpression>, state: any) {
+        if (
+          isCss((nodePath.node.callee as any).name) &&
+          !isArrowFunctionExpression(nodePath.parentPath.node)
+        ) {
+          if (onlyObjectExpression(nodePath.node.arguments)) {
+            nodePath.replaceWith(
+              arrowFunctionExpression(
+                hasSpecialIdentifier(nodePath, constants.theme)
+                  ? [themeWithType]
+                  : [],
+                nodePath.node,
+              ),
+            );
+            return;
+          }
+
+          state.set(SHOULD_APPLY_THEME, true);
+
+          nodePath.replaceWith(
+            callExpression(
+              identifier(constants.applyThemeFn),
+              nodePath.node.arguments,
+            ),
+          );
+        }
+      },
+    },
+    MemberExpression: {
+      enter(nodePath: NodePath<MemberExpression>, { opts }: any) {
+        const jsxAttribute = nodePath.findParent((path) =>
+          isJSXAttribute(path),
+        );
+        const isInlineCssObj =
+          jsxAttribute &&
+          isCss((jsxAttribute.node as any).name.name) &&
+          jsxExpressionContainer;
+
+        const parent: any = nodePath.findParent((path) =>
+          isCallExpression(path),
+        );
+        const isExtractedCssObj = !!parent && isCss(parent.node.callee.name);
+
+        if (isInlineCssObj || isExtractedCssObj) {
+          const keyPath = pickerAllIdentifierName(nodePath.node).join(".");
+          if (!keyPath.startsWith(constants.theme)) {
+            return handleMemberExpression(nodePath, keyPath, opts);
+          }
+        }
+      },
+    },
+  } as Visitor,
+});

@@ -167,18 +167,18 @@ const cases = [
     src: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts"; const libStyles = css(inputStyles, styles);`,
     dest: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts";  const libStyles = applyTheme(inputStyles, styles);`,
   },
-  {
-    title: "extracted css object",
-    src: `const libStyles = css([inputStyles, styles]);`,
-    dest: `const libStyles = applyTheme(inputStyles, styles);`,
-  },
+  // {
+  //   title: "extracted css object",
+  //   src: `const libStyles = css([inputStyles, styles]);`,
+  //   dest: `const libStyles = applyTheme(inputStyles, styles);`,
+  // },
   {
     title: "inline css array",
     src: `<div css={[inputStyles, styles]}>test</div>;`,
     dest: `import applyTheme from "src/test.ts"; <div css={applyTheme(inputStyles, styles)}>test</div>;`,
   },
   {
-    title: "Should handle css with variable",
+    title: "Should handle css with variable and conditions",
     src: `
       const buttonStyleVariant = {orange: css({fontSize: fonts.h1})};
       const buttonStyles = variant ? css(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
