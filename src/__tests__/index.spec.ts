@@ -135,6 +135,15 @@ const cases = [
   {
     title: "Should handle css with variable",
     src: `
+      const buttonStyles = variant ? css(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
+  `,
+    dest: `
+      const buttonStyles = variant ? applyTheme(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
+  `,
+  },
+  {
+    title: "Should handle css with variable",
+    src: `
       const buttonStyleVariant = {orange: css({fontSize: fonts.h1})};
       const buttonStyles = variant ? css(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
       <div css={css(buttonStyles, disabled ? disableButtonStyles: null)} />;

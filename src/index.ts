@@ -20,6 +20,7 @@ import {
   Identifier,
   isArrayExpression,
   isArrowFunctionExpression,
+  callExpression,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -121,6 +122,9 @@ const hasSpecialIdentifier = (
   return flag;
 };
 
+const onlyObjectExpression = (list: any[]) =>
+  list.every((v) => isObjectExpression(v));
+
 export default () => ({
   name: "emotion-css-transform",
   visitor: {
@@ -154,13 +158,20 @@ export default () => ({
           isCss((nodePath.node.callee as any).name) &&
           !isArrowFunctionExpression(nodePath.parentPath.node)
         ) {
+          if (onlyObjectExpression(nodePath.node.arguments)) {
+            nodePath.replaceWith(
+              arrowFunctionExpression(
+                hasSpecialIdentifier(nodePath, constants.theme)
+                  ? [themeWithType]
+                  : [],
+                nodePath.node,
+              ),
+            );
+            return;
+          }
+
           nodePath.replaceWith(
-            arrowFunctionExpression(
-              hasSpecialIdentifier(nodePath, constants.theme)
-                ? [themeWithType]
-                : [],
-              nodePath.node,
-            ),
+            callExpression(identifier("applyTheme"), nodePath.node.arguments),
           );
         }
       },
