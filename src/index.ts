@@ -20,6 +20,7 @@ import {
   MemberExpression,
   Identifier,
   isArrayExpression,
+  isObjectProperty,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -152,7 +153,8 @@ export default () => ({
       exit(nodePath: NodePath<CallExpression>) {
         if (
           isCss((nodePath.node.callee as any).name) &&
-          isVariableDeclarator(nodePath.parentPath?.node)
+          (isVariableDeclarator(nodePath.parentPath?.node) ||
+            isObjectProperty(nodePath.parentPath?.node))
         ) {
           nodePath.replaceWith(
             arrowFunctionExpression(

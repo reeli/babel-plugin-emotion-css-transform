@@ -121,7 +121,18 @@ const cases = [
     dest: "<div css={(theme: Theme) => ({color: theme.colors.pink, background: theme.color.primary})} />;",
   },
   {
-    only: true,
+    title: "Should multiple css fn in one object",
+    src: `
+      const buttonStyleVariant = {orange: css({color: colors.red}), pink: css({color: colors.pink})};
+  `,
+    dest: `
+      const buttonStyleVariant = {
+        orange: (theme: Theme) => css({color: theme.color.primary}),
+        pink: (theme: Theme) => css({color: theme.color.text.primary}) 
+      };
+  `,
+  },
+  {
     title: "Should handle css with variable",
     src: `
       const buttonStyleVariant = {orange: css({fontSize: fonts.h1})};
@@ -154,8 +165,7 @@ const mapping: { [key: string]: any } = {
 };
 
 function unPad(str: string) {
-  return str;
-  // return str.replace(/\s+/gi, "");
+  return str.replace(/\s+/gi, "");
 }
 
 describe("test cases", () => {
