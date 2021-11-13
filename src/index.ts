@@ -4,7 +4,6 @@ import {
   identifier,
   tsTypeAnnotation,
   tSTypeReference,
-  isVariableDeclarator,
   CallExpression,
   isCallExpression,
   memberExpression,
@@ -20,7 +19,7 @@ import {
   MemberExpression,
   Identifier,
   isArrayExpression,
-  isObjectProperty,
+  isArrowFunctionExpression,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -153,8 +152,7 @@ export default () => ({
       exit(nodePath: NodePath<CallExpression>) {
         if (
           isCss((nodePath.node.callee as any).name) &&
-          (isVariableDeclarator(nodePath.parentPath?.node) ||
-            isObjectProperty(nodePath.parentPath?.node))
+          !isArrowFunctionExpression(nodePath.parentPath.node)
         ) {
           nodePath.replaceWith(
             arrowFunctionExpression(

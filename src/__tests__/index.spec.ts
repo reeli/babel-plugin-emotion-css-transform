@@ -87,12 +87,12 @@ const cases = [
   {
     title: "Should handle inline merged css object",
     src: `<div css={css({color: colors.red}, customStyles)} />;`,
-    dest: `<div css={theme => css({color: theme.color.primary}, customStyles)} />;`,
+    dest: `<div css={(theme: Theme) => css({color: theme.color.primary}, customStyles)} />;`,
   },
   {
     title: "Should handle inline merged css object with css function and []",
     src: `<div css={css(customStyles, [{ color: colors.red }])} />`,
-    dest: `<div css={theme => css(customStyles, [{ color: theme.color.primary}])} />;`,
+    dest: `<div css={(theme: Theme) => css(customStyles, [{ color: theme.color.primary}])} />;`,
   },
   {
     title: "Should handle extracted merged css object with only []",
