@@ -72,32 +72,32 @@ const cases = [
   {
     title: "Should handle extracted merged css object",
     src: `<div css={divStyles} />;const divStyles = css({fontSize: fonts.h1}, customStyles, {color:"red"});`,
-    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css({fontSize: theme.fontSize.h1}, customStyles, {color: "red"});`,
+    dest: `import applyTheme from "src/test.ts"; <div css={divStyles} />;const divStyles = applyTheme({fontSize: theme.fontSize.h1}, customStyles, {color: "red"});`,
   },
   {
     title: "Should handle extracted merged css object with css function and []",
     src: `<div css={divStyles} />;const divStyles = css(customStyles, [{ color: colors.red }]);`,
-    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css(customStyles, [{ color: theme.color.primary}]);`,
+    dest: `import applyTheme from "src/test.ts"; <div css={divStyles} />;const divStyles = applyTheme(customStyles, [{ color: theme.color.primary}]);`,
   },
   {
     title: "Should handle extracted merged css object with only []",
     src: `<div css={divStyles} />;const divStyles = css([{ color: colors.red }]);`,
-    dest: `<div css={divStyles} />;const divStyles = (theme: Theme) => css([{ color: theme.color.primary}]);`,
+    dest: `import applyTheme from "src/test.ts"; <div css={divStyles} />;const divStyles = applyTheme([{ color: theme.color.primary}]);`,
   },
   {
     title: "Should handle inline merged css object",
     src: `<div css={css({color: colors.red}, customStyles)} />;`,
-    dest: `<div css={(theme: Theme) => css({color: theme.color.primary}, customStyles)} />;`,
+    dest: `import applyTheme from "src/test.ts"; <div css={applyTheme({color: theme.color.primary}, customStyles)} />;`,
   },
   {
     title: "Should handle inline merged css object with css function and []",
     src: `<div css={css(customStyles, [{ color: colors.red }])} />`,
-    dest: `<div css={(theme: Theme) => css(customStyles, [{ color: theme.color.primary}])} />;`,
+    dest: `import applyTheme from "src/test.ts"; <div css={applyTheme(customStyles, [{ color: theme.color.primary}])} />;`,
   },
   {
     title: "Should handle extracted merged css object with only []",
     src: `<div css={[{ color: colors.red }]} />;`,
-    dest: `<div css={theme => [{ color: theme.color.primary}]} />;`,
+    dest: `import applyTheme from "src/test.ts"; <div css={applyTheme({ color: theme.color.primary})} />;`,
   },
   {
     title:
@@ -113,7 +113,7 @@ const cases = [
   {
     title: "Should handle shorthanded css values",
     src: "<div css={[{ border: `1px solid ${colors.pink}` }]} />;",
-    dest: "<div css={theme => [{ border: `1px solid ${theme.color.text.primary}`}]} />;",
+    dest: 'import applyTheme from "src/test.ts"; <div css={applyTheme({ border: `1px solid ${theme.color.text.primary}`})} />;',
   },
   {
     title: "Should handle inline theme function",
@@ -138,7 +138,7 @@ const cases = [
       const buttonStyles = variant ? css(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
   `,
     dest: `
-      const buttonStyles = variant ? applyTheme(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
+      import applyTheme from "src/test.ts"; const buttonStyles = variant ? applyTheme(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
   `,
   },
   {
@@ -146,10 +146,36 @@ const cases = [
     src: `const containerStyles = css({color: colors.red});`,
     dest: `const containerStyles = (theme: Theme) => css({color: theme.color.primary});`,
   },
+  // {
+  //   title: "extracted css object",
+  //   src: `<div contentStyle={css({width: 120})}>test</div>;`,
+  //   dest: `<div contentStyle={css({width: 120})}>test</div>`,
+  // },
+  {
+    title: "should import applyTheme fn to current file",
+    src: `const libStyles = css(inputStyles, styles);`,
+    dest: `import applyTheme from "src/test.ts"; const libStyles = applyTheme(inputStyles, styles);`,
+  },
+  {
+    title: "should import applyTheme fn to the top of the file",
+    src: `import aaa from "src/aaa.ts"; const libStyles = css(inputStyles, styles);`,
+    dest: `import applyTheme from "src/test.ts"; import aaa from "src/aaa.ts"; const libStyles = applyTheme(inputStyles, styles);`,
+  },
+  {
+    title:
+      "should not import applyTheme fn if current file already imported applyTheme function",
+    src: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts"; const libStyles = css(inputStyles, styles);`,
+    dest: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts";  const libStyles = applyTheme(inputStyles, styles);`,
+  },
+  {
+    title: "extracted css object",
+    src: `const libStyles = css([inputStyles, styles]);`,
+    dest: `const libStyles = applyTheme(inputStyles, styles);`,
+  },
   {
     title: "inline css array",
     src: `<div css={[inputStyles, styles]}>test</div>;`,
-    dest: `<div css={applyTheme(inputStyles, styles)}>test</div>;`,
+    dest: `import applyTheme from "src/test.ts"; <div css={applyTheme(inputStyles, styles)}>test</div>;`,
   },
   {
     title: "Should handle css with variable",
@@ -159,6 +185,7 @@ const cases = [
       <div css={css(buttonStyles, disabled ? disableButtonStyles: null)} />;
   `,
     dest: `
+      import applyTheme from "src/test.ts";
       const buttonStyleVariant = {orange: (theme: Theme) => css({fontSize: theme.fontSize.h1})};
       const buttonStyles = variant ? applyTheme(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
       <div css={applyTheme(buttonStyles, disabled ? disableButtonStyles: null)} />;
