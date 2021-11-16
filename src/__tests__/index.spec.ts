@@ -167,11 +167,11 @@ const cases = [
     src: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts"; const libStyles = css(inputStyles, styles);`,
     dest: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts";  const libStyles = applyTheme(inputStyles, styles);`,
   },
-  // {
-  //   title: "extracted css object",
-  //   src: `const libStyles = css([inputStyles, styles]);`,
-  //   dest: `const libStyles = applyTheme(inputStyles, styles);`,
-  // },
+  {
+    title: "css array with multiple styles",
+    src: `const libStyles = css([inputStyles, styles]);`,
+    dest: `import applyTheme from "src/test.ts"; const libStyles = applyTheme([inputStyles, styles]);`,
+  },
   {
     title: "inline css array",
     src: `<div css={[inputStyles, styles]}>test</div>;`,
