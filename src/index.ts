@@ -32,10 +32,8 @@ const constants = {
   ThemeType: "Theme",
   css: "css",
   applyThemeFn: "applyTheme",
+  shouldApplyTheme: "shouldApplyTheme",
 };
-
-const APPLY_THEM_FN_PATH = "src/test.ts";
-const SHOULD_APPLY_THEME = "shouldApplyTheme";
 
 const createParamWithType = (name: string, type: string) => {
   const id = identifier(name);
@@ -98,10 +96,15 @@ const pickerAllIdentifierName = (node: MemberExpression): string[] => {
   return [obj, prop];
 };
 
+interface PluginOptions {
+  mapping: { [key: string]: any };
+  applyThemePath: string;
+}
+
 const handleMemberExpression = (
   nodePath: NodePath<MemberExpression>,
   keyPath: string,
-  opts: { mapping: { [key: string]: any } },
+  opts: PluginOptions,
 ) => {
   const mapping = opts.mapping;
 
@@ -137,13 +140,13 @@ export default () => ({
   visitor: {
     Program: {
       exit(root: NodePath, state: any) {
-        if (state.get(SHOULD_APPLY_THEME)) {
+        if (state.get(constants.shouldApplyTheme)) {
           root.unshiftContainer(
             // @ts-ignore
             "body",
             importDeclaration(
-              [importDefaultSpecifier(identifier("applyTheme"))],
-              stringLiteral(APPLY_THEM_FN_PATH),
+              [importDefaultSpecifier(identifier(constants.applyThemeFn))],
+              stringLiteral(state.opts.applyThemePath),
             ),
           );
         }
@@ -175,7 +178,7 @@ export default () => ({
           }
 
           if (isArrayStyle) {
-            state.set(SHOULD_APPLY_THEME, true);
+            state.set(constants.shouldApplyTheme, true);
 
             nodePath.replaceWith(
               jsxAttribute(
@@ -212,7 +215,7 @@ export default () => ({
             return;
           }
 
-          state.set(SHOULD_APPLY_THEME, true);
+          state.set(constants.shouldApplyTheme, true);
 
           nodePath.replaceWith(
             callExpression(

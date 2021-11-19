@@ -220,7 +220,7 @@ describe("test cases", () => {
       const src = transform(caseItem.src, {
         plugins: [
           ["@babel/plugin-syntax-typescript", { isTSX: true }],
-          [emotionCssTransform, { mapping }],
+          [emotionCssTransform, { mapping, applyThemePath: "src/test.ts" }],
         ],
       })!.code;
 
