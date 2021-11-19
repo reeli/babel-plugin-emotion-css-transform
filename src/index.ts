@@ -140,7 +140,10 @@ export default () => ({
   visitor: {
     Program: {
       exit(root: NodePath, state: any) {
-        if (state.get(constants.shouldApplyTheme)) {
+        if (
+          state.get(constants.shouldApplyTheme) &&
+          !root.scope.hasBinding(constants.applyThemeFn)
+        ) {
           root.unshiftContainer(
             // @ts-ignore
             "body",
