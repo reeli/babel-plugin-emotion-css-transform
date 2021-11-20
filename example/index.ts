@@ -29,17 +29,28 @@ const transformFile = (fileName: string) => {
     if (!content) {
       return;
     }
+
     const code = transform(content, {
       babelrc: false,
+      generatorOpts: {
+        retainLines: true,
+        retainFunctionParens: true,
+        comments: true,
+      },
       plugins: [
         ["@babel/plugin-syntax-typescript", { isTSX: true }],
-        ["babel-plugin-emotion-css-transform", { mapping }],
+        [
+          "babel-plugin-emotion-css-transform",
+          { mapping, applyThemeFn: "src/applyThemePath.ts" },
+        ],
       ],
     })!.code;
 
     if (code) {
       fs.writeFile(path.resolve(process.cwd(), fileName), code, (err) => {
-        console.log(err?.message);
+        if (err) {
+          console.log(err?.message);
+        }
       });
     }
   });
