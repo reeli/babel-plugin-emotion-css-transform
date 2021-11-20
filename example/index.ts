@@ -2,6 +2,7 @@ import fg from "fast-glob";
 import fs from "fs";
 import { transform } from "@babel/core";
 import path from "path";
+import removeUnusedImports from "../src/removeUnusedImports";
 
 const source = ["demo/**/*.ts", "demo/**/*.tsx"];
 const ignore = ["**/*.test.ts", "**/*.test.tsx", "**/__tests__/**/*.ts"];
@@ -30,13 +31,17 @@ const transformFile = (fileName: string) => {
       return;
     }
 
-    const code = transform(content, {
+    const basicOptions = {
       babelrc: false,
       generatorOpts: {
         retainLines: true,
         retainFunctionParens: true,
         comments: true,
       },
+    };
+
+    const code = transform(content, {
+      ...basicOptions,
       plugins: [
         ["@babel/plugin-syntax-typescript", { isTSX: true }],
         [
@@ -46,12 +51,23 @@ const transformFile = (fileName: string) => {
       ],
     })!.code;
 
-    if (code) {
-      fs.writeFile(path.resolve(process.cwd(), fileName), code, (err) => {
+    if (!code) {
+      return;
+    }
+
+    const code2 = transform(code, {
+      ...basicOptions,
+      plugins: [
+        ["@babel/plugin-syntax-typescript", { isTSX: true }],
+        [removeUnusedImports],
+      ],
+    })!.code;
+
+    code2 &&
+      fs.writeFile(path.resolve(process.cwd(), fileName), code2, (err) => {
         if (err) {
           console.log(err?.message);
         }
       });
-    }
   });
 };

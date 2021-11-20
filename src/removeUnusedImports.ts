@@ -1,6 +1,9 @@
 import { NodePath } from "@babel/traverse";
 import { Visitor } from "@babel/core";
-import { constants } from "./constants";
+
+const constants = {
+  applyThemeFn: "applyTheme",
+};
 
 const filterModuleBindings = (nodePath: NodePath) => {
   const bindings = Object.values(nodePath.scope.bindings);

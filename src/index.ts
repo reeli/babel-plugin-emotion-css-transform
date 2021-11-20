@@ -27,7 +27,14 @@ import {
   ImportDeclaration,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
-import { constants } from "./constants";
+
+const constants = {
+  theme: "theme",
+  ThemeType: "Theme",
+  css: "css",
+  applyThemeFn: "applyTheme",
+  shouldApplyTheme: "shouldApplyTheme",
+};
 
 const createParamWithType = (name: string, type: string) => {
   const id = identifier(name);
