@@ -1,5 +1,6 @@
 import { transform } from "@babel/core";
 import emotionCssTransform from "../";
+import emotionCssTransformRemoveImports from "../removeUnusedImports";
 
 const cases = [
   {
@@ -207,6 +208,16 @@ const cases = [
     dest: `const a = 1;`,
   },
   {
+    title: "should remove unused default import after transform",
+    src: `import fonts from "src/fonts.ts"; const styles = css({fontSize: fonts.h1});`,
+    dest: `const styles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
+  },
+  {
+    title: "should remove unused named import after transform",
+    src: `import {fonts} from "src/fonts.ts"; const styles = css({fontSize: fonts.h1});`,
+    dest: `const styles = (theme: Theme) => css({fontSize: theme.fontSize.h1});`,
+  },
+  {
     title: "Should not throw error if the jsx attribute has no value",
     src: `<div isValid />`,
     dest: `<div isValid />;`,
@@ -239,7 +250,14 @@ describe("test cases", () => {
         ],
       })!.code;
 
-      expect(unPad(src!)).toEqual(unPad(caseItem.dest));
+      const src2 = transform(src as string, {
+        plugins: [
+          ["@babel/plugin-syntax-typescript", { isTSX: true }],
+          [emotionCssTransformRemoveImports],
+        ],
+      })!.code;
+
+      expect(unPad(src2!)).toEqual(unPad(caseItem.dest));
     });
   });
 });

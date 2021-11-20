@@ -27,14 +27,7 @@ import {
   ImportDeclaration,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
-
-const constants = {
-  theme: "theme",
-  ThemeType: "Theme",
-  css: "css",
-  applyThemeFn: "applyTheme",
-  shouldApplyTheme: "shouldApplyTheme",
-};
+import { constants } from "./constants";
 
 const createParamWithType = (name: string, type: string) => {
   const id = identifier(name);
@@ -136,11 +129,6 @@ const hasSpecialIdentifier = (
 const onlyObjectExpression = (list: any[]) =>
   list.every((v) => isObjectExpression(v));
 
-const filterModuleBindings = (nodePath: NodePath) => {
-  const bindings = Object.values(nodePath.scope.bindings);
-  return bindings.filter((v) => v.kind === "module");
-};
-
 export default () => ({
   name: "emotion-css-transform",
   visitor: {
@@ -158,24 +146,6 @@ export default () => ({
               stringLiteral(state.opts.applyThemePath),
             ),
           );
-        }
-      },
-    },
-    ImportDeclaration: {
-      exit(nodePath) {
-        const moduleBindings = filterModuleBindings(nodePath);
-
-        moduleBindings.forEach((v) => {
-          if (!v.referenced) {
-            v.path.remove();
-          }
-        });
-
-        if (
-          filterModuleBindings(nodePath).length == 0 &&
-          !hasSpecialIdentifier(nodePath, constants.applyThemeFn)
-        ) {
-          nodePath.remove();
         }
       },
     },
