@@ -159,13 +159,13 @@ const cases = [
   {
     title: "should import applyTheme fn to the top of the file",
     src: `import aaa from "src/aaa.ts"; const libStyles = css(inputStyles, styles);`,
-    dest: `import applyTheme from "src/test.ts"; import aaa from "src/aaa.ts"; const libStyles = applyTheme(inputStyles, styles);`,
+    dest: `import applyTheme from "src/test.ts"; const libStyles = applyTheme(inputStyles, styles);`,
   },
   {
     title:
       "should not import applyTheme fn if current file already imported applyTheme function",
     src: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts"; const libStyles = css(inputStyles, styles);`,
-    dest: `import applyTheme from "src/test.ts"; import bbb from "src/bbb.ts";  const libStyles = applyTheme(inputStyles, styles);`,
+    dest: `import applyTheme from "src/test.ts"; const libStyles = applyTheme(inputStyles, styles);`,
   },
   {
     title: "css array with multiple styles",
@@ -190,6 +190,21 @@ const cases = [
       const buttonStyles = variant ? applyTheme(basicButtonStyles, buttonStyleVariant[variant]): basicButtonStyles;
       <div css={applyTheme(buttonStyles, disabled ? disableButtonStyles: null)} />;
   `,
+  },
+  {
+    title: "should remove unused import",
+    src: `import { transform, type } from "@babel/core"; transform();`,
+    dest: `import { transform } from "@babel/core"; transform();`,
+  },
+  {
+    title: "should remove unused import",
+    src: `import { transform } from "@babel/core"; const a = 1;`,
+    dest: `const a = 1;`,
+  },
+  {
+    title: "should remove unused import",
+    src: `import bbb from "src/bbb.ts"; const a = 1;`,
+    dest: `const a = 1;`,
   },
   {
     title: "Should not throw error if the jsx attribute has no value",

@@ -24,6 +24,7 @@ import {
   importDeclaration,
   stringLiteral,
   importDefaultSpecifier,
+  ImportDeclaration,
 } from "@babel/types";
 import { Visitor } from "@babel/core";
 
@@ -114,7 +115,7 @@ const handleMemberExpression = (
 };
 
 const hasSpecialIdentifier = (
-  nodePath: NodePath<CallExpression | JSXAttribute>,
+  nodePath: NodePath<CallExpression | JSXAttribute | ImportDeclaration>,
   name: string,
 ): boolean => {
   let flag = false;
@@ -135,6 +136,11 @@ const hasSpecialIdentifier = (
 const onlyObjectExpression = (list: any[]) =>
   list.every((v) => isObjectExpression(v));
 
+const filterModuleBindings = (nodePath: NodePath) => {
+  const bindings = Object.values(nodePath.scope.bindings);
+  return bindings.filter((v) => v.kind === "module");
+};
+
 export default () => ({
   name: "emotion-css-transform",
   visitor: {
@@ -152,6 +158,24 @@ export default () => ({
               stringLiteral(state.opts.applyThemePath),
             ),
           );
+        }
+      },
+    },
+    ImportDeclaration: {
+      exit(nodePath) {
+        const moduleBindings = filterModuleBindings(nodePath);
+
+        moduleBindings.forEach((v) => {
+          if (!v.referenced) {
+            v.path.remove();
+          }
+        });
+
+        if (
+          filterModuleBindings(nodePath).length == 0 &&
+          !hasSpecialIdentifier(nodePath, constants.applyThemeFn)
+        ) {
+          nodePath.remove();
         }
       },
     },
