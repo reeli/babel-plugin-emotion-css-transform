@@ -13,7 +13,7 @@
     "prepublishOnly": "make build"
   },
   "devDependencies": {
-    "@babel/core": "~7.15.0",
+    "@babel/core": "~7.17.9",
     "@babel/plugin-syntax-typescript": "^7.16.0",
     "@types/babel__core": "~7.1.15",
     "@types/babel__traverse": "~7.14.2",
